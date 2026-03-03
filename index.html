@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Мой тестовый сайт — Авторизация</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      color: #333;
+    }
+
+    .container {
+      background: white;
+      padding: 40px 30px;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+      font-size: 28px;
+      color: #4a4a4a;
+    }
+
+    .subtitle {
+      margin-bottom: 30px;
+      color: #777;
+      font-size: 15px;
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+      text-align: left;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #555;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      font-size: 16px;
+      transition: all 0.25s ease;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+    }
+
+    .password-wrapper {
+      position: relative;
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 20px;
+      color: #888;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 17px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background: #5a6ee0;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.35);
+    }
+
+    .extra-links {
+      margin-top: 25px;
+      font-size: 14px;
+    }
+
+    .extra-links a {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .extra-links a:hover {
+      text-decoration: underline;
+    }
+
+    .success-message {
+      display: none;
+      margin-top: 25px;
+      padding: 15px;
+      background: #e8f5e9;
+      color: #2e7d32;
+      border-radius: 10px;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Добро пожаловать</h1>
+    <p class="subtitle">Войдите в свой аккаунт</p>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="username">Логин или email</label>
+        <input type="text" id="username" placeholder="ivan123 или ivan@example.com" required>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Пароль</label>
+        <div class="password-wrapper">
+          <input type="password" id="password" placeholder="••••••••" required>
+          <span class="toggle-password" id="togglePassword">👁</span>
+        </div>
+      </div>
+
+      <button type="submit">Войти</button>
+    </form>
+
+    <div class="extra-links">
+      <a href="#">Забыли пароль?</a> • <a href="#">Создать аккаунт</a>
+    </div>
+
+    <div class="success-message" id="successMsg">
+      Успешный вход! Добро пожаловать, <span id="userName"></span> 🎉
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+    const successMsg = document.getElementById('successMsg');
+    const userNameSpan = document.getElementById('userName');
+
+    // Показать / скрыть пароль
+    togglePassword.addEventListener('click', () => {
+      const type = passwordInput.type === 'password' ? 'text' : 'password';
+      passwordInput.type = type;
+      togglePassword.textContent = type === 'password' ? '👁' : '🙈';
+    });
+
+    // Обработка формы (имитация входа)
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const username = document.getElementById('username').value.trim();
+
+      if (username) {
+        successMsg.style.display = 'block';
+        userNameSpan.textContent = username;
+        form.style.display = 'none'; // можно скрыть форму после "входа"
+      }
+    });
+  </script>
+
+</body>
+</html>
