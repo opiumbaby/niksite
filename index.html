@@ -2,18 +2,18 @@
 <html lang="ru">
 <head>
   <!-- Yandex.Metrika counter -->
-<script type="text/javascript">
+  <script type="text/javascript">
     (function(m,e,t,r,i,k,a){
         m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
         m[i].l=1*new Date();
         for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
         k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
     })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=107096805', 'ym');
-
     ym(107096805, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
-</script>
-<noscript><div><img src="https://mc.yandex.ru/watch/107096805" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter -->
+  </script>
+  <noscript><div><img src="https://mc.yandex.ru/watch/107096805" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+  <!-- /Yandex.Metrika counter -->
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Мой тестовый сайт — Авторизация</title>
@@ -84,6 +84,11 @@
       box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
     }
 
+    input.error-field {
+      border-color: #e53e3e;
+      box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.15);
+    }
+
     .password-wrapper {
       position: relative;
     }
@@ -96,9 +101,10 @@
       cursor: pointer;
       font-size: 20px;
       color: #888;
+      user-select: none;
     }
 
-    button {
+    button[type="submit"] {
       width: 100%;
       padding: 14px;
       background: #667eea;
@@ -112,7 +118,7 @@
       margin-top: 10px;
     }
 
-    button:hover {
+    button[type="submit"]:hover {
       background: #5a6ee0;
       transform: translateY(-2px);
       box-shadow: 0 8px 20px rgba(102, 126, 234, 0.35);
@@ -133,6 +139,25 @@
       text-decoration: underline;
     }
 
+    /* Error message styles */
+    .error-message {
+      display: none;
+      margin-top: 18px;
+      padding: 14px 16px;
+      background: #fff5f5;
+      color: #c53030;
+      border: 1px solid #feb2b2;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      text-align: left;
+    }
+
+    .error-message.visible {
+      display: block;
+    }
+
+    /* Success message styles */
     .success-message {
       display: none;
       margin-top: 25px;
@@ -142,6 +167,17 @@
       border-radius: 10px;
       font-weight: 500;
     }
+
+    .success-message.visible {
+      display: block;
+    }
+
+    .field-error {
+      display: block;
+      margin-top: 6px;
+      font-size: 12px;
+      color: #c53030;
+    }
   </style>
 </head>
 <body>
@@ -150,60 +186,130 @@
     <h1>Добро пожаловать</h1>
     <p class="subtitle">Войдите в свой аккаунт</p>
 
-    <form id="loginForm">
+    <form id="loginForm" novalidate>
       <div class="form-group">
         <label for="username">Логин или email</label>
-        <input type="text" id="username" placeholder="ivan123 или ivan@example.com" required>
+        <input type="text" id="username" placeholder="ivan123 или ivan@example.com" autocomplete="username">
+        <span class="field-error" id="usernameError"></span>
       </div>
 
       <div class="form-group">
         <label for="password">Пароль</label>
         <div class="password-wrapper">
-          <input type="password" id="password" placeholder="••••••••" required>
-          <span class="toggle-password" id="togglePassword">👁</span>
+          <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+          <span class="toggle-password" id="togglePassword" role="button" aria-label="Показать/скрыть пароль">👁</span>
         </div>
+        <span class="field-error" id="passwordError"></span>
       </div>
 
-      <button type="submit">Войти</button>
+      <button type="submit" id="loginBtn">Войти</button>
     </form>
+
+    <!-- Сообщение об ошибке входа (TC-02: неверный пароль) -->
+    <div class="error-message" id="errorMsg"></div>
 
     <div class="extra-links">
       <a href="#">Забыли пароль?</a> • <a href="#">Создать аккаунт</a>
     </div>
 
+    <!-- Сообщение об успешном входе (TC-01) -->
     <div class="success-message" id="successMsg">
       Успешный вход! Добро пожаловать, <span id="userName"></span> 🎉
     </div>
   </div>
 
   <script>
-    const form = document.getElementById('loginForm');
+    // ────────────────────────────────
+    //  Простая база пользователей
+    //  для корректной работы тест-кейсов
+    // ────────────────────────────────
+    const USERS = {
+      'testuser':       'password123',
+      'admin':          'admin123',
+      'ivan@example.com': 'password123'
+    };
+
+    const form          = document.getElementById('loginForm');
+    const loginBtn      = document.getElementById('loginBtn');
     const togglePassword = document.getElementById('togglePassword');
     const passwordInput = document.getElementById('password');
-    const successMsg = document.getElementById('successMsg');
-    const userNameSpan = document.getElementById('userName');
+    const usernameInput = document.getElementById('username');
+    const successMsg    = document.getElementById('successMsg');
+    const errorMsg      = document.getElementById('errorMsg');
+    const userNameSpan  = document.getElementById('userName');
+    const usernameError = document.getElementById('usernameError');
+    const passwordError = document.getElementById('passwordError');
 
-    // Показать / скрыть пароль
+    // ── Показать / скрыть пароль ──
     togglePassword.addEventListener('click', () => {
-      const type = passwordInput.type === 'password' ? 'text' : 'password';
-      passwordInput.type = type;
-      togglePassword.textContent = type === 'password' ? '👁' : '🙈';
+      const isPassword = passwordInput.type === 'password';
+      passwordInput.type = isPassword ? 'text' : 'password';
+      togglePassword.textContent = isPassword ? '🙈' : '👁';
     });
 
-    // Обработка формы (имитация входа)
+    // ── Сброс ошибок при вводе ──
+    usernameInput.addEventListener('input', clearErrors);
+    passwordInput.addEventListener('input', clearErrors);
+
+    function clearErrors() {
+      usernameInput.classList.remove('error-field');
+      passwordInput.classList.remove('error-field');
+      usernameError.textContent = '';
+      passwordError.textContent = '';
+      errorMsg.classList.remove('visible');
+      errorMsg.textContent = '';
+    }
+
+    // ── Валидация и обработка входа ──
     form.addEventListener('submit', (e) => {
       e.preventDefault();
 
-      const username = document.getElementById('username').value.trim();
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value;
 
-      if (username) {
-        successMsg.style.display = 'block';
-        userNameSpan.textContent = username;
-        form.style.display = 'none'; // можно скрыть форму после "входа"
+      let valid = true;
+
+      // TC-03: Проверка пустых полей
+      if (!username) {
+        usernameInput.classList.add('error-field');
+        usernameError.textContent = 'Поле «Логин или email» обязательно для заполнения.';
+        valid = false;
       }
+
+      if (!password) {
+        passwordInput.classList.add('error-field');
+        passwordError.textContent = 'Поле «Пароль» обязательно для заполнения.';
+        valid = false;
+      }
+
+      if (!valid) return;
+
+      // TC-01 / TC-02: Проверка учётных данных
+      const expectedPassword = USERS[username];
+
+      if (!expectedPassword) {
+        // Пользователь не найден
+        errorMsg.textContent = 'Пользователь с таким логином не найден.';
+        errorMsg.classList.add('visible');
+        usernameInput.classList.add('error-field');
+        return;
+      }
+
+      if (expectedPassword !== password) {
+        // TC-02: Неверный пароль
+        errorMsg.textContent = 'Неверный пароль. Пожалуйста, проверьте введённые данные.';
+        errorMsg.classList.add('visible');
+        passwordInput.classList.add('error-field');
+        return;
+      }
+
+      // TC-01: Успешный вход
+      form.style.display = 'none';
+      errorMsg.classList.remove('visible');
+      successMsg.classList.add('visible');
+      userNameSpan.textContent = username;
     });
   </script>
 
 </body>
-
 </html>
